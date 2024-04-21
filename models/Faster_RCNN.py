@@ -3,6 +3,7 @@ from torch import nn
 from RPN import RPN
 from Backbones import get_backbone
 from roi_pooling import ROIPooling
+from prediction_layer import BBoxClassifier, BboxDeltaFC
 
 
 class Faster_RCNN(nn.Module):
@@ -14,18 +15,31 @@ class Faster_RCNN(nn.Module):
         feature_dim = backbone_conv_cls.op_chnls
         self.rpn = RPN(feature_dim)
         self.roi_pool = ROIPooling(7)
+        self.classifier = BBoxClassifier()
+        self.bboxdel = BboxDeltaFC()
 
     def forward(self, ip_batch):
         feature_set = self.backbone(ip_batch)
-        proposals, feature_map_projection = self.rpn(feature_set)
+        bg_fg_pred, proposals, feature_map_projection = self.rpn(feature_set)
+
         b_size, wid, hei, K, _ = proposals.shape
+        proposals = proposals.view(b_size, -1, 4)
+        # can't filter as differnt images have different valid boxes
+        # proposals = proposals[bg_fg_pred[:, :, 1] > 0.5]
         rois = feature_map_projection.view(b_size, -1, 4)
         pooled_rois = self.roi_pool(feature_set, rois)
-        return pooled_rois
+        prediected_classes = self.classifier(pooled_rois)
+        bbox_del = self.bboxdel(pooled_rois)
+        print(f"prediected_classes: {prediected_classes.shape}")
+        print(f"bbox_del: {bbox_del.shape}")
+        predicted_boxes = proposals + bbox_del
+        predicted_boxes = torch.clamp(predicted_boxes, 0, 512)
+        return bg_fg_pred, prediected_classes, predicted_boxes
 
 
 if __name__ == "__main__":
     f_rcnn = Faster_RCNN("VGG16")
-    pooled_rois = f_rcnn(torch.rand((21, 3, 512, 512)))
-    print(pooled_rois.shape)
-    # print(feature_maps.shape)
+    bg_fg_pred, prediected_classes, predicted_boxes = f_rcnn(torch.rand((21, 3, 512, 512)))
+    print(bg_fg_pred.shape)
+    print(prediected_classes.shape)
+    print(predicted_boxes.shape)

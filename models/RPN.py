@@ -38,14 +38,15 @@ class RPN(nn.Module):
         )
 
         bg_fg_pred = bg_fg_pred.permute(0, 2, 3, 1).contiguous()
-        bg_fg_pred = bg_fg_pred.view(batch_size, -1)
+        bg_fg_pred = bg_fg_pred.view(batch_size, -1, 2)
+        bg_fg_pred = torch.softmax(bg_fg_pred, dim=2)
         proposals = self.__proposal_predictions(deltas_pred)
         print(f"proposal shape: {proposals.shape}")
         print(f"bg_fg_pred shape: {bg_fg_pred.shape}")
         print(f"deltas_pred shape: {deltas_pred.shape}")
         feature_map_projection = self.mapping.proposal_to_featuremap(proposals)
         print(f"feature_map_projection: {feature_map_projection.shape}")
-        return proposals, feature_map_projection
+        return bg_fg_pred, proposals, feature_map_projection
 
     def __proposal_predictions(self, deltas_pred):
         boxes = self.anchors
@@ -75,6 +76,7 @@ class RPN(nn.Module):
 if __name__ == "__main__":
     rpn = RPN(512)
     ip_t = torch.rand((10, 512, 16, 16))
-    proposal, feature_map = rpn(ip_t)
+    bg_fg_pred, proposal, feature_map = rpn(ip_t)
+    print(bg_fg_pred.shape)
     print(torch.min(feature_map))
     print(torch.max(feature_map))
