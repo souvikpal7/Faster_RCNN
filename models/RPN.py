@@ -25,9 +25,9 @@ class RPN(nn.Module):
         batch_size, channels, feat_wid, feat_hei = img_feature.shape
         bg_fg_pred = F.relu(self.RPN_cls_score(img_feature))
         deltas_pred = F.relu(self.RPN_bbox_pred(img_feature))
-        print(bg_fg_pred.shape)
-        print(deltas_pred.shape)
-        print(f"batch_size: {batch_size}")
+        # print(bg_fg_pred.shape)
+        # print(deltas_pred.shape)
+        # print(f"batch_size: {batch_size}")
         deltas_pred = deltas_pred.permute(0, 2, 3, 1).contiguous()
         deltas_pred = deltas_pred.view(
             batch_size,
@@ -41,18 +41,18 @@ class RPN(nn.Module):
         bg_fg_pred = bg_fg_pred.view(batch_size, -1, 2)
         bg_fg_pred = torch.softmax(bg_fg_pred, dim=2)
         proposals = self.__proposal_predictions(deltas_pred)
-        print(f"proposal shape: {proposals.shape}")
-        print(f"bg_fg_pred shape: {bg_fg_pred.shape}")
-        print(f"deltas_pred shape: {deltas_pred.shape}")
+        # print(f"proposal shape: {proposals.shape}")
+        # print(f"bg_fg_pred shape: {bg_fg_pred.shape}")
+        # print(f"deltas_pred shape: {deltas_pred.shape}")
         feature_map_projection = self.mapping.proposal_to_featuremap(proposals)
-        print(f"feature_map_projection: {feature_map_projection.shape}")
+        # print(f"feature_map_projection: {feature_map_projection.shape}")
         return bg_fg_pred, proposals, feature_map_projection
 
     def __proposal_predictions(self, deltas_pred):
         boxes = self.anchors
         deltas = deltas_pred
-        print(f"boxes shape: {boxes.shape}")
-        print(f"deltas shape: {deltas.shape}")
+        # print(f"boxes shape: {boxes.shape}")
+        # print(f"deltas shape: {deltas.shape}")
         pred_boxes = deltas + boxes
         pred_boxes[:, :, :, :, 2] = pred_boxes[:, :, :, :, 0] + pred_boxes[:, :, :, :, 2]
         pred_boxes[:, :, :, :, 3] = pred_boxes[:, :, :, :, 1] + pred_boxes[:, :, :, :, 3]

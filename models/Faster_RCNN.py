@@ -30,8 +30,8 @@ class Faster_RCNN(nn.Module):
         pooled_rois = self.roi_pool(feature_set, rois)
         prediected_classes = self.classifier(pooled_rois)
         bbox_del = self.bboxdel(pooled_rois)
-        print(f"prediected_classes: {prediected_classes.shape}")
-        print(f"bbox_del: {bbox_del.shape}")
+        # print(f"prediected_classes: {prediected_classes.shape}")
+        # print(f"bbox_del: {bbox_del.shape}")
         predicted_boxes = proposals + bbox_del
         predicted_boxes = torch.clamp(predicted_boxes, 0, 512)
         return bg_fg_pred, prediected_classes, predicted_boxes
@@ -39,7 +39,9 @@ class Faster_RCNN(nn.Module):
 
 if __name__ == "__main__":
     f_rcnn = Faster_RCNN("VGG16")
-    bg_fg_pred, prediected_classes, predicted_boxes = f_rcnn(torch.rand((21, 3, 512, 512)))
-    print(bg_fg_pred.shape)
-    print(prediected_classes.shape)
-    print(predicted_boxes.shape)
+    ip_tensor = torch.rand((16, 3, 512, 512))
+    print(f"Input Tensor Shape: {ip_tensor.shape}")
+    bg_fg_pred, prediected_classes, predicted_boxes = f_rcnn(ip_tensor)
+    print(f"Background Foreground prediction shape: {bg_fg_pred.shape}")
+    print(f"Predicted Class shape: {prediected_classes.shape}")
+    print(f"Predicted BBox shape{predicted_boxes.shape}")

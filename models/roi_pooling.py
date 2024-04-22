@@ -11,7 +11,7 @@ class ROIPooling(torch.nn.Module):
         b_size, no_chnls, f_wid, f_hei = feature_map.shape
         # feature_map = feature_map.view(-1, f_wid, f_hei)
         _, roi_cnt, _ = rois.shape
-        print(f"roi_cnt: {roi_cnt}")
+        # print(f"roi_cnt: {roi_cnt}")
         pooled_rois = torch.zeros(b_size, roi_cnt, no_chnls, self.output_size, self.output_size)
 
         for b_idx in range(b_size):
